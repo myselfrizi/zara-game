@@ -6,6 +6,10 @@
     <title>Zara's Boss Girl Quest</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -59,9 +63,6 @@
         <div class="flex-1 space-y-8">
             
             <div class="glass p-8 text-center shadow-xl relative">
-                <button onclick="openProfile()" class="absolute top-4 right-4 bg-white/50 hover:bg-white px-4 py-2 rounded-lg shadow text-sm font-bold text-purple-700 transition">
-                    👤 Profile
-                </button>
                 <button onclick="logout()" class="absolute top-4 left-4 bg-white/50 hover:bg-white px-4 py-2 rounded-lg shadow text-sm font-bold text-pink-600 transition">
                     🚪 Logout
                 </button>
@@ -138,51 +139,47 @@
         </div>
     </div>
 
-    <div id="profileModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-        <div class="glass p-8 max-w-md w-full shadow-2xl relative">
-            <button onclick="closeProfile()" class="absolute top-4 right-4 text-gray-500 hover:text-red-500 font-bold">✕</button>
-            <h2 class="text-2xl font-bold text-purple-700 mb-6">Edit Profile</h2>
-            
-            <form id="profileForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">Display Name</label>
-                    <input type="text" id="editName" required class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-pink-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">Email</label>
-                    <input type="email" id="editEmail" required class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-pink-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-600 mb-1">New Password</label>
-                    <input type="password" id="editPassword" placeholder="Leave blank to keep current" class="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-pink-500">
-                </div>
-                <button type="submit" class="w-full bg-gradient-to-r from-emerald-400 to-emerald-600 text-white font-bold py-2 rounded-lg shadow-md hover:opacity-90 transition">
-                    Save Changes
-                </button>
-            </form>
-        </div>
-    </div>
-
     <script>
-        // Data State
-        let users = JSON.parse(localStorage.getItem('zaraUsers')) || [];
-        let currentUser = JSON.parse(localStorage.getItem('zaraCurrentUser')) || null;
-        let gems = parseInt(localStorage.getItem('zaraGems')) || 0;
-        let tasks = JSON.parse(localStorage.getItem('zaraTasks')) || [];
-        let isRegistering = false;
+        // ==========================================
+        // FIREBASE CONFIGURATION
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC2rq8zKlvhEDRmoqMiiIEd_Zf5RfCMKs4",
+            authDomain: "zara-quest.firebaseapp.com",
+            // NOTE: I added the databaseURL for you based on the standard Europe format. 
+            // If it fails to connect, change this to "https://zara-quest-default-rtdb.firebaseio.com"
+            databaseURL: "https://zara-quest-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "zara-quest",
+            storageBucket: "zara-quest.firebasestorage.app",
+            messagingSenderId: "911052380030",
+            appId: "1:911052380030:web:98a35d4813f8463f7d052f"
+        };
+        // ==========================================
 
-        // Auth Logic
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Local Auth State
+        let currentUser = JSON.parse(localStorage.getItem('zaraCurrentUser')) || null;
+        let isRegistering = false;
+        
+        // Game State from Firebase
+        let globalGems = 0;
+        let allTasks = {};
+
+        // DOM Elements
         const authScreen = document.getElementById('authScreen');
         const appScreen = document.getElementById('appScreen');
         const authForm = document.getElementById('authForm');
         
+        // Auth Logic 
         function checkAuth() {
             if (currentUser) {
                 authScreen.classList.add('hidden');
                 appScreen.classList.remove('hidden');
                 appScreen.classList.add('flex');
                 document.getElementById('welcomeName').innerText = currentUser.name;
-                updateUI();
             } else {
                 authScreen.classList.remove('hidden');
                 appScreen.classList.add('hidden');
@@ -208,23 +205,13 @@
         authForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-
-            if (isRegistering) {
-                const name = document.getElementById('authName').value;
-                const userExists = users.find(u => u.email === email);
-                if (userExists) return alert("Email already registered!");
-                
-                const newUser = { name, email, password };
-                users.push(newUser);
-                localStorage.setItem('zaraUsers', JSON.stringify(users));
-                currentUser = newUser;
-            } else {
-                const user = users.find(u => u.email === email && u.password === password);
-                if (!user) return alert("Invalid credentials!");
-                currentUser = user;
+            let name = document.getElementById('authName').value;
+            
+            if (!isRegistering) {
+                name = email.split('@')[0]; 
             }
-
+            
+            currentUser = { name: name, email: email };
             localStorage.setItem('zaraCurrentUser', JSON.stringify(currentUser));
             authForm.reset();
             checkAuth();
@@ -236,57 +223,33 @@
             checkAuth();
         }
 
-        // Profile Logic
-        const profileModal = document.getElementById('profileModal');
-        const profileForm = document.getElementById('profileForm');
+        // Firebase Sync Logic
+        function listenToFirebase() {
+            // Listen to Gems
+            db.ref('quest/gems').on('value', (snapshot) => {
+                globalGems = snapshot.val() || 0;
+                updateUI();
+            });
 
-        function openProfile() {
-            document.getElementById('editName').value = currentUser.name;
-            document.getElementById('editEmail').value = currentUser.email;
-            profileModal.classList.remove('hidden');
+            // Listen to Tasks
+            db.ref('quest/tasks').on('value', (snapshot) => {
+                allTasks = snapshot.val() || {};
+                updateUI();
+            });
         }
 
-        function closeProfile() {
-            profileModal.classList.add('hidden');
-            document.getElementById('editPassword').value = '';
-        }
-
-        profileForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const newName = document.getElementById('editName').value;
-            const newEmail = document.getElementById('editEmail').value;
-            const newPassword = document.getElementById('editPassword').value;
-
-            const userIndex = users.findIndex(u => u.email === currentUser.email);
-            
-            users[userIndex].name = newName;
-            users[userIndex].email = newEmail;
-            if (newPassword) users[userIndex].password = newPassword;
-
-            currentUser = users[userIndex];
-            localStorage.setItem('zaraUsers', JSON.stringify(users));
-            localStorage.setItem('zaraCurrentUser', JSON.stringify(currentUser));
-            
-            document.getElementById('welcomeName').innerText = currentUser.name;
-            closeProfile();
-            alert("Profile updated!");
-        });
-
-        // App Logic
         function formatDate(dateString) {
             if (!dateString) return "Unknown date";
             return new Date(dateString).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
 
         function updateUI() {
-            document.getElementById('gemCount').innerText = gems;
-            localStorage.setItem('zaraGems', gems);
-            document.getElementById('poundBalance').innerText = '£' + (gems * 0.01).toFixed(2);
-            localStorage.setItem('zaraTasks', JSON.stringify(tasks));
+            document.getElementById('gemCount').innerText = globalGems;
+            document.getElementById('poundBalance').innerText = '£' + (globalGems * 0.01).toFixed(2);
 
             let level = 1, levelName = "The Rookie";
-            if (gems >= 51) { level = 2; levelName = "Rising Star"; }
-            if (gems >= 151) { level = 3; levelName = "Boss Executive"; }
+            if (globalGems >= 51) { level = 2; levelName = "Rising Star"; }
+            if (globalGems >= 151) { level = 3; levelName = "Boss Executive"; }
             document.getElementById('levelDisplay').innerText = levelName;
 
             const simpleList = document.getElementById('simpleList');
@@ -296,10 +259,14 @@
 
             simpleList.innerHTML = ''; mediumList.innerHTML = ''; hardList.innerHTML = ''; historyList.innerHTML = '';
 
-            const activeTasks = []; const completedTasks = [];
-            tasks.forEach((task, index) => {
-                if (task.completed) completedTasks.push({ ...task, originalIndex: index });
-                else activeTasks.push({ ...task, originalIndex: index });
+            const activeTasks = []; 
+            const completedTasks = [];
+            
+            Object.keys(allTasks).forEach(key => {
+                const task = allTasks[key];
+                task.id = key; 
+                if (task.completed) completedTasks.push(task);
+                else activeTasks.push(task);
             });
 
             activeTasks.forEach(task => {
@@ -310,7 +277,7 @@
                 
                 let btnHTML = isLocked 
                     ? `<button disabled class="px-3 py-1 rounded-md text-xs font-bold text-white bg-gray-400 cursor-not-allowed">🔒 Locked</button>`
-                    : `<button onclick="completeTask(${task.originalIndex}, '${task.difficulty}')" class="px-3 py-1 rounded-md text-xs font-bold text-white bg-indigo-400 hover:bg-indigo-500 shadow-sm">Done ✓</button>`;
+                    : `<button onclick="completeTask('${task.id}', '${task.difficulty}')" class="px-3 py-1 rounded-md text-xs font-bold text-white bg-indigo-400 hover:bg-indigo-500 shadow-sm">Done ✓</button>`;
 
                 taskDiv.innerHTML = `
                     <div class="flex justify-between items-start gap-2">
@@ -343,28 +310,36 @@
             });
         }
 
-        function completeTask(index, difficulty) {
-            gems += (difficulty === 'simple' ? 10 : difficulty === 'medium' ? 20 : 50);
-            tasks[index].completed = true;
-            tasks[index].dateCompleted = new Date().toISOString();
-            updateUI();
-        }
+        window.completeTask = function(taskId, difficulty) {
+            let pointsEarned = difficulty === 'simple' ? 10 : difficulty === 'medium' ? 20 : 50;
+            
+            db.ref('quest/tasks/' + taskId).update({
+                completed: true,
+                dateCompleted: new Date().toISOString()
+            });
+
+            db.ref('quest/gems').transaction(function(currentGems) {
+                return (currentGems || 0) + pointsEarned;
+            });
+        };
 
         document.getElementById('taskForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            tasks.push({
+            
+            db.ref('quest/tasks').push({
                 text: document.getElementById('taskInput').value,
                 difficulty: document.getElementById('difficultySelect').value,
                 completed: false,
                 dateAdded: new Date().toISOString(),
-                assignedBy: currentUser.name 
+                assignedBy: currentUser ? currentUser.name : "Admin"
             });
+            
             document.getElementById('taskInput').value = '';
-            updateUI();
         });
 
         // Init
         checkAuth();
+        listenToFirebase();
     </script>
 </body>
 </html>
