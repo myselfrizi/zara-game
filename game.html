@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zara's Boss Girl Quest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+            min-height: 100vh;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="p-6 text-gray-800">
+
+    <div class="max-w-4xl mx-auto space-y-8">
+        
+        <!-- Header Profile Section -->
+        <div class="glass p-8 text-center shadow-xl">
+            <h1 class="text-4xl font-bold text-purple-600 mb-2">✨ Zara's Boss Girl Quest ✨</h1>
+            <p class="text-lg text-gray-600 mb-6">Complete tasks, earn gems, and unlock the next level.</p>
+            
+            <div class="flex justify-center gap-8">
+                <div class="bg-white p-4 rounded-xl shadow-md border border-pink-200 w-40">
+                    <p class="text-sm text-gray-500 font-semibold">Total Gems 💎</p>
+                    <p id="gemCount" class="text-3xl font-bold text-pink-500">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md border border-purple-200 w-48">
+                    <p class="text-sm text-gray-500 font-semibold">Current Level 👑</p>
+                    <p id="levelDisplay" class="text-xl font-bold text-purple-600 mt-1">The Rookie</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Task Section (For You) -->
+        <div class="glass p-6 shadow-lg">
+            <h2 class="text-2xl font-bold text-purple-700 mb-4">📝 Add a New Task</h2>
+            <form id="taskForm" class="flex flex-col md:flex-row gap-4">
+                <input type="text" id="taskInput" placeholder="What needs to be done?" required
+                    class="flex-1 px-4 py-3 rounded-lg border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-500">
+                
+                <select id="difficultySelect" class="px-4 py-3 rounded-lg border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
+                    <option value="simple">Simple (10 Gems)</option>
+                    <option value="medium">Medium (20 Gems)</option>
+                    <option value="hard">Hard (50 Gems)</option>
+                </select>
+                
+                <button type="submit" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition shadow-md">
+                    Add Task ➕
+                </button>
+            </form>
+        </div>
+
+        <!-- Task Board -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Simple Tasks -->
+            <div class="glass p-6 shadow-lg">
+                <div class="bg-pink-100 p-2 rounded-lg text-center mb-4 border border-pink-200">
+                    <h3 class="text-xl font-bold text-pink-600">🎀 Simple Tasks</h3>
+                    <p class="text-sm text-pink-500">10 Gems (Always Unlocked)</p>
+                </div>
+                <div id="simpleList" class="space-y-3"></div>
+            </div>
+
+            <!-- Medium Tasks -->
+            <div class="glass p-6 shadow-lg">
+                <div class="bg-purple-100 p-2 rounded-lg text-center mb-4 border border-purple-200">
+                    <h3 class="text-xl font-bold text-purple-600">💫 Medium Tasks</h3>
+                    <p class="text-sm text-purple-500">20 Gems (Unlocks at 51 Gems)</p>
+                </div>
+                <div id="mediumList" class="space-y-3"></div>
+            </div>
+
+            <!-- Hard Tasks -->
+            <div class="glass p-6 shadow-lg">
+                <div class="bg-indigo-100 p-2 rounded-lg text-center mb-4 border border-indigo-200">
+                    <h3 class="text-xl font-bold text-indigo-600">🚀 Hard Tasks</h3>
+                    <p class="text-sm text-indigo-500">50 Gems (Unlocks at 151 Gems)</p>
+                </div>
+                <div id="hardList" class="space-y-3"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        let gems = parseInt(localStorage.getItem('zaraGems')) || 0;
+        let tasks = JSON.parse(localStorage.getItem('zaraTasks')) || [];
+
+        // DOM Elements
+        const gemCountEl = document.getElementById('gemCount');
+        const levelDisplayEl = document.getElementById('levelDisplay');
+        const taskForm = document.getElementById('taskForm');
+        const simpleList = document.getElementById('simpleList');
+        const mediumList = document.getElementById('mediumList');
+        const hardList = document.getElementById('hardList');
+
+        // Logic
+        function updateUI() {
+            gemCountEl.innerText = gems;
+            localStorage.setItem('zaraGems', gems);
+            localStorage.setItem('zaraTasks', JSON.stringify(tasks));
+
+            // Calculate Level
+            let level = 1;
+            let levelName = "The Rookie";
+            if (gems >= 51) {
+                level = 2;
+                levelName = "Rising Star";
+            }
+            if (gems >= 151) {
+                level = 3;
+                levelName = "Boss Executive";
+            }
+            levelDisplayEl.innerText = levelName;
+
+            // Clear lists
+            simpleList.innerHTML = '';
+            mediumList.innerHTML = '';
+            hardList.innerHTML = '';
+
+            // Render Tasks
+            tasks.forEach((task, index) => {
+                if (task.completed) return; // Hide completed tasks
+
+                const taskDiv = document.createElement('div');
+                taskDiv.className = "bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center gap-2";
+                
+                const taskText = document.createElement('span');
+                taskText.className = "text-sm font-medium text-gray-700";
+                taskText.innerText = task.text;
+
+                const actionBtn = document.createElement('button');
+                actionBtn.className = "px-3 py-1 rounded-md text-xs font-bold text-white transition shadow-sm";
+
+                // Check locks based on level
+                let isLocked = false;
+                if (task.difficulty === 'medium' && level < 2) isLocked = true;
+                if (task.difficulty === 'hard' && level < 3) isLocked = true;
+
+                if (isLocked) {
+                    actionBtn.innerText = "🔒 Locked";
+                    actionBtn.className += " bg-gray-400 cursor-not-allowed";
+                    actionBtn.disabled = true;
+                } else {
+                    actionBtn.innerText = "Done ✓";
+                    if (task.difficulty === 'simple') actionBtn.className += " bg-pink-400 hover:bg-pink-500";
+                    if (task.difficulty === 'medium') actionBtn.className += " bg-purple-400 hover:bg-purple-500";
+                    if (task.difficulty === 'hard') actionBtn.className += " bg-indigo-400 hover:bg-indigo-500";
+                    
+                    actionBtn.onclick = () => completeTask(index, task.difficulty);
+                }
+
+                taskDiv.appendChild(taskText);
+                taskDiv.appendChild(actionBtn);
+
+                if (task.difficulty === 'simple') simpleList.appendChild(taskDiv);
+                if (task.difficulty === 'medium') mediumList.appendChild(taskDiv);
+                if (task.difficulty === 'hard') hardList.appendChild(taskDiv);
+            });
+
+            // Show empty states if lists are empty
+            if(simpleList.innerHTML === '') simpleList.innerHTML = '<p class="text-xs text-center text-gray-400">No tasks right now.</p>';
+            if(mediumList.innerHTML === '') mediumList.innerHTML = '<p class="text-xs text-center text-gray-400">No tasks right now.</p>';
+            if(hardList.innerHTML === '') hardList.innerHTML = '<p class="text-xs text-center text-gray-400">No tasks right now.</p>';
+        }
+
+        function completeTask(index, difficulty) {
+            let pointsEarned = 0;
+            if (difficulty === 'simple') pointsEarned = 10;
+            if (difficulty === 'medium') pointsEarned = 20;
+            if (difficulty === 'hard') pointsEarned = 50;
+
+            gems += pointsEarned;
+            tasks[index].completed = true;
+            updateUI();
+        }
+
+        taskForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const textInput = document.getElementById('taskInput').value;
+            const diffInput = document.getElementById('difficultySelect').value;
+            
+            tasks.push({
+                text: textInput,
+                difficulty: diffInput,
+                completed: false
+            });
+
+            document.getElementById('taskInput').value = '';
+            updateUI();
+        });
+
+        // Initial Render
+        updateUI();
+    </script>
+</body>
+</html>
