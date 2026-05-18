@@ -18,80 +18,116 @@
             border-radius: 1rem;
             border: 1px solid rgba(255, 255, 255, 0.5);
         }
+        /* Custom scrollbar for the history list */
+        .history-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .history-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.2); 
+            border-radius: 10px;
+        }
+        .history-scroll::-webkit-scrollbar-thumb {
+            background: rgba(236, 72, 153, 0.5); 
+            border-radius: 10px;
+        }
     </style>
 </head>
-<body class="p-6 text-gray-800">
+<body class="p-4 md:p-8 text-gray-800">
 
-    <div class="max-w-4xl mx-auto space-y-8">
+    <div class="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
         
-        <div class="glass p-8 text-center shadow-xl">
-            <h1 class="text-4xl font-bold text-purple-600 mb-2">✨ Zara's Boss Girl Quest ✨</h1>
-            <p class="text-lg text-gray-600 mb-6">Complete tasks, earn gems, and grow your wallet.</p>
+        <div class="flex-1 space-y-8">
             
-            <div class="flex flex-wrap justify-center gap-4 md:gap-8">
-                <div class="bg-white p-4 rounded-xl shadow-md border border-pink-200 w-36 md:w-40">
-                    <p class="text-sm text-gray-500 font-semibold">Total Gems 💎</p>
-                    <p id="gemCount" class="text-3xl font-bold text-pink-500">0</p>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-md border border-emerald-200 w-36 md:w-40">
-                    <p class="text-sm text-gray-500 font-semibold">Earnings 💷</p>
-                    <p id="poundBalance" class="text-3xl font-bold text-emerald-500">£0.00</p>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-md border border-purple-200 w-40 md:w-48">
-                    <p class="text-sm text-gray-500 font-semibold">Current Level 👑</p>
-                    <p id="levelDisplay" class="text-xl font-bold text-purple-600 mt-1">The Rookie</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="glass p-6 shadow-lg">
-            <h2 class="text-2xl font-bold text-purple-700 mb-4">📝 Add a New Task</h2>
-            <form id="taskForm" class="flex flex-col md:flex-row gap-4">
-                <input type="text" id="taskInput" placeholder="What needs to be done?" required
-                    class="flex-1 px-4 py-3 rounded-lg border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-500">
+            <div class="glass p-8 text-center shadow-xl">
+                <h1 class="text-4xl font-bold text-purple-600 mb-2">✨ Zara's Boss Girl Quest ✨</h1>
+                <p class="text-lg text-gray-600 mb-6">Complete tasks, earn gems, and grow your wallet.</p>
                 
-                <select id="difficultySelect" class="px-4 py-3 rounded-lg border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
-                    <option value="simple">Simple (10 Gems / £0.10)</option>
-                    <option value="medium">Medium (20 Gems / £0.20)</option>
-                    <option value="hard">Hard (50 Gems / £0.50)</option>
-                </select>
+                <div class="flex flex-wrap justify-center gap-4 md:gap-8">
+                    <div class="bg-white p-4 rounded-xl shadow-md border border-pink-200 w-36 md:w-40">
+                        <p class="text-sm text-gray-500 font-semibold">Total Gems 💎</p>
+                        <p id="gemCount" class="text-3xl font-bold text-pink-500">0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md border border-emerald-200 w-36 md:w-40">
+                        <p class="text-sm text-gray-500 font-semibold">Earnings 💷</p>
+                        <p id="poundBalance" class="text-3xl font-bold text-emerald-500">£0.00</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md border border-purple-200 w-40 md:w-48">
+                        <p class="text-sm text-gray-500 font-semibold">Current Level 👑</p>
+                        <p id="levelDisplay" class="text-xl font-bold text-purple-600 mt-1">The Rookie</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass p-6 shadow-lg">
+                <h2 class="text-2xl font-bold text-purple-700 mb-4">📝 Add a New Task</h2>
+                <form id="taskForm" class="flex flex-col md:flex-row gap-4">
+                    <input type="text" id="taskInput" placeholder="What needs to be done?" required
+                        class="flex-1 px-4 py-3 rounded-lg border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    
+                    <select id="difficultySelect" class="px-4 py-3 rounded-lg border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
+                        <option value="simple">Simple (10 Gems / £0.10)</option>
+                        <option value="medium">Medium (20 Gems / £0.20)</option>
+                        <option value="hard">Hard (50 Gems / £0.50)</option>
+                    </select>
+                    
+                    <button type="submit" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition shadow-md">
+                        Add Task ➕
+                    </button>
+                </form>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
-                <button type="submit" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition shadow-md">
-                    Add Task ➕
-                </button>
-            </form>
+                <div class="glass p-6 shadow-lg flex flex-col h-full">
+                    <div class="bg-pink-100 p-2 rounded-lg text-center mb-4 border border-pink-200">
+                        <h3 class="text-xl font-bold text-pink-600">🎀 Simple Tasks</h3>
+                        <p class="text-sm text-pink-500">10 Gems (Always Unlocked)</p>
+                    </div>
+                    <div id="simpleList" class="space-y-3 flex-1"></div>
+                </div>
+
+                <div class="glass p-6 shadow-lg flex flex-col h-full">
+                    <div class="bg-purple-100 p-2 rounded-lg text-center mb-4 border border-purple-200">
+                        <h3 class="text-xl font-bold text-purple-600">💫 Medium Tasks</h3>
+                        <p class="text-sm text-purple-500">20 Gems (Unlocks at 51 Gems)</p>
+                    </div>
+                    <div id="mediumList" class="space-y-3 flex-1"></div>
+                </div>
+
+                <div class="glass p-6 shadow-lg flex flex-col h-full">
+                    <div class="bg-indigo-100 p-2 rounded-lg text-center mb-4 border border-indigo-200">
+                        <h3 class="text-xl font-bold text-indigo-600">🚀 Hard Tasks</h3>
+                        <p class="text-sm text-indigo-500">50 Gems (Unlocks at 151 Gems)</p>
+                    </div>
+                    <div id="hardList" class="space-y-3 flex-1"></div>
+                </div>
+
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <div class="glass p-6 shadow-lg">
-                <div class="bg-pink-100 p-2 rounded-lg text-center mb-4 border border-pink-200">
-                    <h3 class="text-xl font-bold text-pink-600">🎀 Simple Tasks</h3>
-                    <p class="text-sm text-pink-500">10 Gems (Always Unlocked)</p>
+        <div class="w-full lg:w-80 lg:shrink-0 h-fit">
+            <div class="glass p-6 shadow-lg flex flex-col max-h-[800px]">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-2xl">📜</span>
+                    <h2 class="text-2xl font-bold text-purple-700">Quest History</h2>
                 </div>
-                <div id="simpleList" class="space-y-3"></div>
+                <p class="text-sm text-gray-500 mb-4">A record of all completed tasks and milestones.</p>
+                
+                <div id="historyList" class="space-y-4 overflow-y-auto history-scroll pr-2 pb-2 flex-1">
+                    </div>
             </div>
-
-            <div class="glass p-6 shadow-lg">
-                <div class="bg-purple-100 p-2 rounded-lg text-center mb-4 border border-purple-200">
-                    <h3 class="text-xl font-bold text-purple-600">💫 Medium Tasks</h3>
-                    <p class="text-sm text-purple-500">20 Gems (Unlocks at 51 Gems)</p>
-                </div>
-                <div id="mediumList" class="space-y-3"></div>
-            </div>
-
-            <div class="glass p-6 shadow-lg">
-                <div class="bg-indigo-100 p-2 rounded-lg text-center mb-4 border border-indigo-200">
-                    <h3 class="text-xl font-bold text-indigo-600">🚀 Hard Tasks</h3>
-                    <p class="text-sm text-indigo-500">50 Gems (Unlocks at 151 Gems)</p>
-                </div>
-                <div id="hardList" class="space-y-3"></div>
-            </div>
-
         </div>
+
     </div>
 
     <script>
+        // Helper to format dates
+        function formatDate(dateString) {
+            if (!dateString) return "Unknown date";
+            const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return new Date(dateString).toLocaleDateString('en-GB', options);
+        }
+
         // State Management
         let gems = parseInt(localStorage.getItem('zaraGems')) || 0;
         let tasks = JSON.parse(localStorage.getItem('zaraTasks')) || [];
@@ -104,6 +140,7 @@
         const simpleList = document.getElementById('simpleList');
         const mediumList = document.getElementById('mediumList');
         const hardList = document.getElementById('hardList');
+        const historyList = document.getElementById('historyList');
 
         // Logic
         function updateUI() {
@@ -135,20 +172,37 @@
             simpleList.innerHTML = '';
             mediumList.innerHTML = '';
             hardList.innerHTML = '';
+            historyList.innerHTML = '';
 
-            // Render Tasks
+            // Arrays for rendering
+            const activeTasks = [];
+            const completedTasks = [];
+
             tasks.forEach((task, index) => {
-                if (task.completed) return; // Hide completed tasks
+                // Ensure old tasks have an added date just in case
+                if (!task.dateAdded) task.dateAdded = new Date().toISOString();
 
+                if (task.completed) {
+                    completedTasks.push({ ...task, originalIndex: index });
+                } else {
+                    activeTasks.push({ ...task, originalIndex: index });
+                }
+            });
+
+            // Render Active Tasks
+            activeTasks.forEach(task => {
                 const taskDiv = document.createElement('div');
-                taskDiv.className = "bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex justify-between items-center gap-2";
+                taskDiv.className = "bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col gap-3";
+                
+                const topRow = document.createElement('div');
+                topRow.className = "flex justify-between items-start gap-2";
                 
                 const taskText = document.createElement('span');
-                taskText.className = "text-sm font-medium text-gray-700";
+                taskText.className = "text-sm font-medium text-gray-700 leading-snug";
                 taskText.innerText = task.text;
 
                 const actionBtn = document.createElement('button');
-                actionBtn.className = "px-3 py-1 rounded-md text-xs font-bold text-white transition shadow-sm whitespace-nowrap";
+                actionBtn.className = "px-3 py-1 rounded-md text-xs font-bold text-white transition shadow-sm whitespace-nowrap mt-1";
 
                 // Check locks based on level
                 let isLocked = false;
@@ -165,21 +219,67 @@
                     if (task.difficulty === 'medium') actionBtn.className += " bg-purple-400 hover:bg-purple-500";
                     if (task.difficulty === 'hard') actionBtn.className += " bg-indigo-400 hover:bg-indigo-500";
                     
-                    actionBtn.onclick = () => completeTask(index, task.difficulty);
+                    actionBtn.onclick = () => completeTask(task.originalIndex, task.difficulty);
                 }
 
-                taskDiv.appendChild(taskText);
-                taskDiv.appendChild(actionBtn);
+                const dateText = document.createElement('span');
+                dateText.className = "text-[10px] text-gray-400 mt-2 block";
+                dateText.innerText = "Added: " + formatDate(task.dateAdded);
+
+                topRow.appendChild(taskText);
+                topRow.appendChild(actionBtn);
+                
+                taskDiv.appendChild(topRow);
+                taskDiv.appendChild(dateText);
 
                 if (task.difficulty === 'simple') simpleList.appendChild(taskDiv);
                 if (task.difficulty === 'medium') mediumList.appendChild(taskDiv);
                 if (task.difficulty === 'hard') hardList.appendChild(taskDiv);
             });
 
-            // Show empty states if lists are empty
-            if(simpleList.innerHTML === '') simpleList.innerHTML = '<p class="text-xs text-center text-gray-400">No tasks right now.</p>';
-            if(mediumList.innerHTML === '') mediumList.innerHTML = '<p class="text-xs text-center text-gray-400">No tasks right now.</p>';
-            if(hardList.innerHTML === '') hardList.innerHTML = '<p class="text-xs text-center text-gray-400">No tasks right now.</p>';
+            // Show empty states for active lists
+            if(simpleList.innerHTML === '') simpleList.innerHTML = '<p class="text-xs text-center text-gray-400">No active tasks.</p>';
+            if(mediumList.innerHTML === '') mediumList.innerHTML = '<p class="text-xs text-center text-gray-400">No active tasks.</p>';
+            if(hardList.innerHTML === '') hardList.innerHTML = '<p class="text-xs text-center text-gray-400">No active tasks.</p>';
+
+            // Render History (Sort by most recently completed)
+            completedTasks.sort((a, b) => new Date(b.dateCompleted) - new Date(a.dateCompleted));
+
+            if (completedTasks.length === 0) {
+                historyList.innerHTML = '<p class="text-sm text-center text-gray-400 italic mt-8">No tasks completed yet. Time to get to work!</p>';
+            } else {
+                completedTasks.forEach(task => {
+                    const historyCard = document.createElement('div');
+                    historyCard.className = "bg-white p-4 rounded-lg shadow-sm border-l-4";
+                    
+                    // Style based on difficulty
+                    let diffLabel = "";
+                    if (task.difficulty === 'simple') {
+                        historyCard.className += " border-pink-400";
+                        diffLabel = "<span class='text-xs font-bold text-pink-500 bg-pink-50 px-2 py-1 rounded'>Simple</span>";
+                    }
+                    if (task.difficulty === 'medium') {
+                        historyCard.className += " border-purple-400";
+                        diffLabel = "<span class='text-xs font-bold text-purple-500 bg-purple-50 px-2 py-1 rounded'>Medium</span>";
+                    }
+                    if (task.difficulty === 'hard') {
+                        historyCard.className += " border-indigo-400";
+                        diffLabel = "<span class='text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded'>Hard</span>";
+                    }
+
+                    historyCard.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <p class="text-sm font-medium text-gray-800">${task.text}</p>
+                            ${diffLabel}
+                        </div>
+                        <div class="text-[11px] text-gray-500 flex flex-col gap-1">
+                            <p>📅 Added: ${formatDate(task.dateAdded)}</p>
+                            <p>✅ Done: <span class="font-semibold text-emerald-600">${formatDate(task.dateCompleted)}</span></p>
+                        </div>
+                    `;
+                    historyList.appendChild(historyCard);
+                });
+            }
         }
 
         function completeTask(index, difficulty) {
@@ -190,6 +290,7 @@
 
             gems += pointsEarned;
             tasks[index].completed = true;
+            tasks[index].dateCompleted = new Date().toISOString(); // Record completion time
             updateUI();
         }
 
@@ -201,7 +302,8 @@
             tasks.push({
                 text: textInput,
                 difficulty: diffInput,
-                completed: false
+                completed: false,
+                dateAdded: new Date().toISOString() // Record creation time
             });
 
             document.getElementById('taskInput').value = '';
