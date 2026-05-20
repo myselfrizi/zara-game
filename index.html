@@ -22,12 +22,18 @@
             border-radius: 1rem;
             border: 1px solid rgba(255, 255, 255, 0.5);
         }
+        .glass-modal {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
         .history-scroll::-webkit-scrollbar { width: 6px; }
         .history-scroll::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
         .history-scroll::-webkit-scrollbar-thumb { background: rgba(236, 72, 153, 0.5); border-radius: 10px; }
     </style>
 </head>
-<body class="p-4 md:p-8 text-gray-800">
+<body class="p-4 md:p-8 text-gray-800 relative">
 
     <div id="authScreen" class="max-w-md mx-auto mt-20 glass p-8 shadow-2xl">
         <h1 class="text-3xl font-bold text-center text-purple-600 mb-6" id="authTitle">Login to Quest</h1>
@@ -88,17 +94,20 @@
 
             <div class="glass p-6 shadow-lg">
                 <h2 class="text-2xl font-bold text-purple-700 mb-4">📝 Add a New Task</h2>
-                <form id="taskForm" class="flex flex-col md:flex-row gap-4">
-                    <input type="text" id="taskInput" placeholder="What needs to be done?" required
-                        class="flex-1 px-4 py-3 rounded-lg border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-500">
+                <form id="taskForm" class="flex flex-col gap-4">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <input type="text" id="taskInput" placeholder="Task Title (e.g., Update CRM)" required
+                            class="flex-1 px-4 py-3 rounded-lg border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-500">
+                        
+                        <select id="difficultySelect" class="px-4 py-3 rounded-lg border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
+                            <option value="simple">Simple (10 Gems)</option>
+                            <option value="medium">Medium (20 Gems)</option>
+                            <option value="hard">Hard (50 Gems)</option>
+                        </select>
+                    </div>
+                    <textarea id="taskDescription" placeholder="Detailed instructions for Zara (optional)..." class="w-full px-4 py-3 rounded-lg border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-500 h-24"></textarea>
                     
-                    <select id="difficultySelect" class="px-4 py-3 rounded-lg border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
-                        <option value="simple">Simple (10 Gems / £0.10)</option>
-                        <option value="medium">Medium (20 Gems / £0.20)</option>
-                        <option value="hard">Hard (50 Gems / £0.50)</option>
-                    </select>
-                    
-                    <button type="submit" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition shadow-md">
+                    <button type="submit" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition shadow-md w-full md:w-auto self-end">
                         Add Task ➕
                     </button>
                 </form>
@@ -139,6 +148,44 @@
         </div>
     </div>
 
+    <div id="completionModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="glass-modal p-8 max-w-md w-full shadow-2xl relative">
+            <h2 class="text-2xl font-bold text-purple-700 mb-2">Task Completed! 🎉</h2>
+            <p class="text-sm text-gray-600 mb-4">Great job. Please detail exactly what you did to complete this task before claiming your gems.</p>
+            
+            <textarea id="completionNotes" placeholder="I completed this by..." class="w-full px-4 py-3 rounded-lg border border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-500 h-32 mb-4"></textarea>
+            
+            <div class="flex gap-4">
+                <button onclick="closeCompletionModal()" class="flex-1 bg-gray-200 text-gray-700 font-bold py-3 rounded-lg hover:bg-gray-300 transition">Cancel</button>
+                <button onclick="confirmCompleteTask()" class="flex-1 bg-gradient-to-r from-emerald-400 to-emerald-600 text-white font-bold py-3 rounded-lg shadow-md hover:opacity-90 transition">Complete Task</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="detailsModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="glass-modal p-8 max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeDetailsModal()" class="absolute top-4 right-4 text-gray-500 hover:text-red-500 font-bold text-xl">✕</button>
+            <h2 class="text-2xl font-bold text-purple-700 mb-6 border-b pb-2" id="detTitle">Task Details</h2>
+            
+            <div class="grid grid-cols-2 gap-y-4 gap-x-2 mb-6 text-sm">
+                <div><p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Created By</p><p id="detCreatedBy" class="font-medium text-gray-800"></p></div>
+                <div><p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Completed By</p><p id="detCompletedBy" class="font-medium text-gray-800"></p></div>
+                <div><p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Creation Date</p><p id="detCreationDate" class="font-medium text-gray-800"></p></div>
+                <div><p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Completion Date</p><p id="detCompletionDate" class="font-medium text-gray-800"></p></div>
+            </div>
+
+            <div class="mb-6">
+                <p class="text-xs font-bold text-purple-500 uppercase tracking-wide border-b border-purple-100 pb-1 mb-2">Assignee Notes</p>
+                <p id="detAssigneeNotes" class="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 p-3 rounded-lg border border-gray-100"></p>
+            </div>
+
+            <div id="detZaraSection" class="hidden">
+                <p class="text-xs font-bold text-emerald-500 uppercase tracking-wide border-b border-emerald-100 pb-1 mb-2">Completion Notes</p>
+                <p id="detZaraNotes" class="text-sm text-gray-700 whitespace-pre-wrap bg-emerald-50 p-3 rounded-lg border border-emerald-100"></p>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==========================================
         // FIREBASE CONFIGURATION
@@ -146,8 +193,6 @@
         const firebaseConfig = {
             apiKey: "AIzaSyC2rq8zKlvhEDRmoqMiiIEd_Zf5RfCMKs4",
             authDomain: "zara-quest.firebaseapp.com",
-            // NOTE: I added the databaseURL for you based on the standard Europe format. 
-            // If it fails to connect, change this to "https://zara-quest-default-rtdb.firebaseio.com"
             databaseURL: "https://zara-quest-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "zara-quest",
             storageBucket: "zara-quest.firebasestorage.app",
@@ -156,22 +201,23 @@
         };
         // ==========================================
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Local Auth State
         let currentUser = JSON.parse(localStorage.getItem('zaraCurrentUser')) || null;
         let isRegistering = false;
         
-        // Game State from Firebase
         let globalGems = 0;
         let allTasks = {};
+        
+        let pendingCompletionTaskId = null;
+        let pendingCompletionDifficulty = null;
 
-        // DOM Elements
         const authScreen = document.getElementById('authScreen');
         const appScreen = document.getElementById('appScreen');
         const authForm = document.getElementById('authForm');
+        const completionModal = document.getElementById('completionModal');
+        const detailsModal = document.getElementById('detailsModal');
         
         // Auth Logic 
         function checkAuth() {
@@ -207,9 +253,7 @@
             const email = document.getElementById('authEmail').value;
             let name = document.getElementById('authName').value;
             
-            if (!isRegistering) {
-                name = email.split('@')[0]; 
-            }
+            if (!isRegistering) name = email.split('@')[0]; 
             
             currentUser = { name: name, email: email };
             localStorage.setItem('zaraCurrentUser', JSON.stringify(currentUser));
@@ -225,13 +269,11 @@
 
         // Firebase Sync Logic
         function listenToFirebase() {
-            // Listen to Gems
             db.ref('quest/gems').on('value', (snapshot) => {
                 globalGems = snapshot.val() || 0;
                 updateUI();
             });
 
-            // Listen to Tasks
             db.ref('quest/tasks').on('value', (snapshot) => {
                 allTasks = snapshot.val() || {};
                 updateUI();
@@ -239,7 +281,7 @@
         }
 
         function formatDate(dateString) {
-            if (!dateString) return "Unknown date";
+            if (!dateString) return "N/A";
             return new Date(dateString).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
 
@@ -271,22 +313,27 @@
 
             activeTasks.forEach(task => {
                 const taskDiv = document.createElement('div');
-                taskDiv.className = "bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col gap-2";
+                taskDiv.className = "bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col gap-3";
                 
                 let isLocked = (task.difficulty === 'medium' && level < 2) || (task.difficulty === 'hard' && level < 3);
                 
                 let btnHTML = isLocked 
                     ? `<button disabled class="px-3 py-1 rounded-md text-xs font-bold text-white bg-gray-400 cursor-not-allowed">🔒 Locked</button>`
-                    : `<button onclick="completeTask('${task.id}', '${task.difficulty}')" class="px-3 py-1 rounded-md text-xs font-bold text-white bg-indigo-400 hover:bg-indigo-500 shadow-sm">Done ✓</button>`;
+                    : `<button onclick="openCompletionModal('${task.id}', '${task.difficulty}')" class="px-3 py-1 rounded-md text-xs font-bold text-white bg-indigo-400 hover:bg-indigo-500 shadow-sm">Done ✓</button>`;
 
                 taskDiv.innerHTML = `
                     <div class="flex justify-between items-start gap-2">
                         <span class="text-sm font-medium text-gray-700 leading-snug">${task.text}</span>
-                        ${btnHTML}
                     </div>
-                    <div class="text-[10px] text-gray-400 mt-1 flex justify-between">
-                        <span>👤 Assigned by: <span class="font-semibold text-purple-500">${task.assignedBy || 'Admin'}</span></span>
-                        <span>${formatDate(task.dateAdded)}</span>
+                    <div class="flex justify-between items-end mt-1">
+                        <div class="text-[10px] text-gray-400 flex flex-col">
+                            <span>👤 By: <span class="font-semibold text-purple-500">${task.assignedBy || 'Admin'}</span></span>
+                            <span>${formatDate(task.dateAdded)}</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="openDetails('${task.id}')" class="px-2 py-1 rounded-md text-xs font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200">ℹ️ Details</button>
+                            ${btnHTML}
+                        </div>
                     </div>
                 `;
 
@@ -300,34 +347,91 @@
                 historyCard.className = `bg-white p-4 rounded-lg shadow-sm border-l-4 ${task.difficulty === 'simple' ? 'border-pink-400' : task.difficulty === 'medium' ? 'border-purple-400' : 'border-indigo-400'}`;
                 
                 historyCard.innerHTML = `
-                    <p class="text-sm font-medium text-gray-800 mb-2">${task.text}</p>
-                    <div class="text-[11px] text-gray-500 flex flex-col gap-1">
-                        <p>👤 Assigned by: ${task.assignedBy || 'Admin'}</p>
-                        <p>✅ Done: <span class="font-semibold text-emerald-600">${formatDate(task.dateCompleted)}</span></p>
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-sm font-medium text-gray-800 pr-2">${task.text}</p>
+                        <button onclick="openDetails('${task.id}')" class="px-2 py-1 rounded-md text-[10px] font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 border border-gray-200 whitespace-nowrap">ℹ️ Details</button>
+                    </div>
+                    <div class="text-[11px] text-gray-500 flex flex-col gap-1 border-t border-gray-100 pt-2">
+                        <p>✅ Done by <span class="font-semibold text-emerald-600">${task.completedBy || 'Zara'}</span> on ${formatDate(task.dateCompleted)}</p>
                     </div>
                 `;
                 historyList.appendChild(historyCard);
             });
         }
 
-        window.completeTask = function(taskId, difficulty) {
-            let pointsEarned = difficulty === 'simple' ? 10 : difficulty === 'medium' ? 20 : 50;
+        // Completion Flow
+        window.openCompletionModal = function(taskId, difficulty) {
+            pendingCompletionTaskId = taskId;
+            pendingCompletionDifficulty = difficulty;
+            document.getElementById('completionNotes').value = '';
+            completionModal.classList.remove('hidden');
+        };
+
+        window.closeCompletionModal = function() {
+            completionModal.classList.add('hidden');
+            pendingCompletionTaskId = null;
+            pendingCompletionDifficulty = null;
+        };
+
+        window.confirmCompleteTask = function() {
+            const notes = document.getElementById('completionNotes').value.trim();
+            if (!notes) {
+                alert("Please add completion notes before proceeding.");
+                return;
+            }
+
+            let pointsEarned = pendingCompletionDifficulty === 'simple' ? 10 : pendingCompletionDifficulty === 'medium' ? 20 : 50;
             
-            db.ref('quest/tasks/' + taskId).update({
+            db.ref('quest/tasks/' + pendingCompletionTaskId).update({
                 completed: true,
-                dateCompleted: new Date().toISOString()
+                dateCompleted: new Date().toISOString(),
+                completedBy: currentUser ? currentUser.name : "Zara",
+                completionDetails: notes
             });
 
             db.ref('quest/gems').transaction(function(currentGems) {
                 return (currentGems || 0) + pointsEarned;
             });
+
+            closeCompletionModal();
         };
 
+        // Details Modal Flow
+        window.openDetails = function(taskId) {
+            const task = allTasks[taskId];
+            if (!task) return;
+
+            document.getElementById('detTitle').innerText = task.text;
+            document.getElementById('detCreatedBy').innerText = task.assignedBy || 'Admin';
+            document.getElementById('detCreationDate').innerText = formatDate(task.dateAdded);
+            
+            document.getElementById('detAssigneeNotes').innerText = task.description || 'No additional details provided.';
+
+            if (task.completed) {
+                document.getElementById('detCompletedBy').innerText = task.completedBy || 'Unknown';
+                document.getElementById('detCompletionDate').innerText = formatDate(task.dateCompleted);
+                document.getElementById('detZaraSection').classList.remove('hidden');
+                document.getElementById('detZaraNotes').innerText = task.completionDetails || 'No completion notes provided.';
+            } else {
+                document.getElementById('detCompletedBy').innerText = 'Pending';
+                document.getElementById('detCompletionDate').innerText = 'Pending';
+                document.getElementById('detZaraSection').classList.add('hidden');
+            }
+
+            detailsModal.classList.remove('hidden');
+        };
+
+        window.closeDetailsModal = function() {
+            detailsModal.classList.add('hidden');
+        };
+
+        // Adding Tasks
         document.getElementById('taskForm').addEventListener('submit', (e) => {
             e.preventDefault();
             
             db.ref('quest/tasks').push({
                 text: document.getElementById('taskInput').value,
+                description: document.getElementById('taskDescription').value,
                 difficulty: document.getElementById('difficultySelect').value,
                 completed: false,
                 dateAdded: new Date().toISOString(),
@@ -335,9 +439,9 @@
             });
             
             document.getElementById('taskInput').value = '';
+            document.getElementById('taskDescription').value = '';
         });
 
-        // Init
         checkAuth();
         listenToFirebase();
     </script>
